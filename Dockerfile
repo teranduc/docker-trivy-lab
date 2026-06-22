@@ -26,38 +26,30 @@
 # =============================================
 
 # === IMAGEN BASE ===
-# TODO: Cambiar esta imagen base (debian:13-slim es más moderna y segura)
-FROM debian:11-slim
+FROM debian:12-slim
 
 # === INSTALACIÓN DE PAQUETES ===
-# Cada RUN es una capa nueva → imagen más grande, cache ineficiente
-RUN apt-get update
-RUN apt-get install -y openssl
-# Se han quitado estos paquetes inseguros (curl, wget) ya no pasan el escaneo de Trivy (CVE's críticas)
-# RUN apt-get install -y curl
-# RUN apt-get install -y wget
-RUN apt-get install -y netcat-traditional
-# Sin rm -rf /var/lib/apt/lists/* → la caché de apt se queda en la imagen
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    openssl \
+    python3 \
+    && rm -rf /var/lib/apt/lists/*
 
 # === USUARIO ===
-# TODO: Crear usuario no-root y cambiar a él
 RUN useradd -m -u 1001 appuser
+USER appuser
 
-# === SECRETOS (MALÍSIMA PRÁCTICA) ===
-# TODO: Eliminar completamente esta línea
-RUN echo 'SECRET_KEY=super_secret_key_123' > /root/.env
-
-COPY index.html /var/www/html/index.html
+# === COPIA DE LA APP ===
+WORKDIR /app
+# Cambia el propietario y el grupo del archivo index.html a appuser en el mismo momento en que se copia a la imagen.
+COPY --chown=appuser:appuser index.html /app/index.html
 
 # === INFORMACIÓN DEL SISTEMA ===
-# TODO: Eliminar esta línea (no debe quedar rastro del host)
-RUN uname -a > /etc/banner.txt
-
-EXPOSE 80
+# Usuario no root no puede exponer puertos < 1024
+EXPOSE 8080
 
 # === COMANDO DE INICIO ===
-# TODO: Reemplazar por un comando seguro
-CMD ["sh", "-c", "while true; do nc -l -p 80 -e /bin/bash; done"]
+# Reemplazar por un comando seguro
+CMD ["python3", "-m", "http.server", "8080"]
 
 # =============================================
 # RESUMEN DE CAMBIOS RECOMENDADOS:
