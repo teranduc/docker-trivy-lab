@@ -26,7 +26,7 @@
 # =============================================
 
 # === IMAGEN BASE ===
-FROM debian:12-slim
+FROM debian:13-slim
 
 # === INSTALACIÓN DE PAQUETES ===
 RUN apt-get update && apt-get install -y --no-install-recommends \
